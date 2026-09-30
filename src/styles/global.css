@@ -246,6 +246,14 @@ a:focus-visible {
   letter-spacing: 0.13em;
 }
 
+.student-status {
+  margin: -6px 0 0;
+  color: #9a9690;
+  font-size: 8px;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+}
+
 .intro-rule {
   width: 40px;
   height: 2px;
@@ -254,6 +262,7 @@ a:focus-visible {
 }
 
 .tagline {
+  max-width: 31ch;
   margin: 0;
   color: #928f88;
   font-size: 10px;
@@ -413,6 +422,11 @@ a:focus-visible {
   box-shadow: 0 14px 60px rgba(0, 0, 0, 0.33);
   backdrop-filter: blur(13px);
   animation: panel-in 230ms ease-out both;
+  max-height: calc(100dvh - 130px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(196, 16, 16, 0.55) rgba(255, 255, 255, 0.06);
+  scrollbar-width: thin;
 }
 
 .artifact-panel.panel-left {
@@ -510,13 +524,31 @@ a:focus-visible {
 .content-list {
   display: grid;
   gap: 12px;
-  max-height: 35dvh;
-  overflow: hidden;
 }
 
 .content-entry h3 {
-  margin: 0 0 5px;
+  margin: 0;
   font: 600 16px 'Arial Narrow', Impact, sans-serif;
+}
+
+.project-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.project-stage {
+  flex: 0 0 auto;
+  color: #9b958a;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.featured-project {
+  padding-left: 9px;
+  border-left: 1px solid var(--red);
 }
 
 .content-entry p {
@@ -531,11 +563,112 @@ a:focus-visible {
   letter-spacing: 0.08em;
 }
 
+.content-entry .project-result {
+  color: #e1d5c1;
+  font-size: 9px;
+}
+
 .entry-links {
   display: flex;
   gap: 18px;
   margin-top: 7px;
   font-size: 9px;
+}
+
+.skill-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  gap: 11px 16px;
+}
+
+.stack-heading {
+  margin: 0 0 9px;
+  color: #eee9df;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+}
+
+.skill-group h3,
+.learning-group h3,
+.focus-group h3,
+.journey h3 {
+  margin: 0 0 4px;
+  color: #c4beb2;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+}
+
+.skill-group p,
+.learning-group p,
+.focus-group p {
+  margin: 0;
+  color: #e2ded4;
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.learning-group,
+.focus-group {
+  margin-top: 13px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
+.about-content {
+  display: grid;
+  gap: 14px;
+}
+
+.about-summary {
+  margin: 0;
+  color: #c4c0b7;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.journey {
+  display: grid;
+  gap: 6px;
+}
+
+.journey h3 {
+  margin-bottom: 2px;
+}
+
+.journey p {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 8px;
+  margin: 0;
+  color: #d5d0c6;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.journey p span {
+  color: #a62420;
+  letter-spacing: 0.08em;
+}
+
+.philosophy {
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
+.philosophy h3 {
+  margin: 0 0 5px;
+  color: #eee9df;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.philosophy p {
+  margin: 0;
+  color: #a9a59c;
+  font-size: 9px;
+  line-height: 1.6;
 }
 
 .panel-footer {
@@ -628,6 +761,11 @@ a:focus-visible {
     line-height: 1.65;
   }
 
+  .student-status {
+    font-size: 6px;
+    line-height: 1.6;
+  }
+
   .intro-rule {
     width: 27px;
     margin: 9px 0 7px;
@@ -689,7 +827,7 @@ a:focus-visible {
     right: 14px;
     bottom: 116px;
     width: calc(100% - 28px);
-    max-height: 34dvh;
+    max-height: 42dvh;
     padding: 15px 17px 12px;
     transform: none;
     animation-name: panel-in-mobile;
@@ -716,6 +854,14 @@ a:focus-visible {
   .panel-description {
     margin: 14px 0 9px;
     font-size: 10px;
+  }
+
+  .content-list {
+    gap: 10px;
+  }
+
+  .content-entry h3 {
+    font-size: 14px;
   }
 
   .panel-footer {

@@ -70,17 +70,7 @@ function createReliefGeometry(width: number, height: number, profile: ReliefProf
     let depth: number;
 
     if (profile === 'head') {
-      const ny = (imageY / height - 0.5) * 2;
-      const helmet = (
-        gaussian(u, 0.29, 0.15) + gaussian(u, 0.7, 0.15)
-      ) * gaussian(imageY, 73, 58) * 0.1;
-      const cheeks = gaussian(u, 0.51, 0.23) * gaussian(imageY, 393, 158) * 0.13;
-      const nose = gaussian(u, 0.52, 0.044) * gaussian(imageY, 383, 60) * 0.19;
-      const brow = gaussian(u, 0.52, 0.2) * gaussian(imageY, 297, 32) * 0.045;
-      const sockets = (
-        gaussian(u, 0.42, 0.045) + gaussian(u, 0.64, 0.045)
-      ) * gaussian(imageY, 366, 25) * 0.045;
-      depth = 0.21 * sideRound * (1 - 0.12 * ny * ny) + helmet + cheeks + nose + brow - sockets;
+      depth = 0;
     } else {
       const upperChest = gaussian(imageY, 180, 240);
       const vestPanels = (
@@ -112,12 +102,12 @@ function createBustShell(profile: ReliefProfile): THREE.BufferGeometry {
   shape.closePath();
 
   return new THREE.ExtrudeGeometry(shape, {
-    depth: profile === 'head' ? 0.24 : 0.2,
-    bevelEnabled: true,
+    depth: profile === 'head' ? 0.025 : 0.2,
+    bevelEnabled: profile === 'body',
     bevelSegments: 2,
     steps: 1,
-    bevelSize: 0.01,
-    bevelThickness: 0.012,
+    bevelSize: profile === 'head' ? 0 : 0.01,
+    bevelThickness: profile === 'head' ? 0 : 0.012,
   });
 }
 
@@ -211,14 +201,14 @@ function PortraitLayer({
     side: THREE.DoubleSide,
     roughness: 0.94,
     metalness: 0.02,
-    bumpMap: texture,
-    bumpScale: profile === 'head' ? 0.003 : 0.002,
+    bumpMap: profile === 'head' ? null : texture,
+    bumpScale: profile === 'head' ? 0 : 0.002,
   }), [profile, texture]);
 
   return (
     <>
       <mesh
-        position={[x, y, z - (profile === 'head' ? 0.34 : 0.24)]}
+        position={[x, y, z - (profile === 'head' ? 0.025 : 0.24)]}
         renderOrder={order - 1}
         geometry={bust}
         material={bustMaterial}

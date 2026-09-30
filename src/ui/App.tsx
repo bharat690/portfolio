@@ -1,5 +1,20 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { artifacts, achievementDetails, contactDetails, educationDetails, projectDetails, sectionCopy, skillDetails, type ArtifactId, type SectionId } from '../data/portfolio';
+import {
+  artifacts,
+  achievementDetails,
+  contactDetails,
+  currentStack,
+  educationDetails,
+  engineeringJourney,
+  focusAreas,
+  learningFocus,
+  philosophy,
+  profile,
+  projectDetails,
+  sectionCopy,
+  type ArtifactId,
+  type SectionId,
+} from '../data/portfolio';
 import { useReducedMotion } from '../state/useReducedMotion';
 
 const PortfolioScene = lazy(() => import('../scene/PortfolioScene').then((module) => ({ default: module.PortfolioScene })));
@@ -10,34 +25,72 @@ const navigation: Array<{ section: SectionId; label: string }> = [
   { section: 'skills', label: 'SKILLS' },
   { section: 'about', label: 'ABOUT' },
   { section: 'contact', label: 'CONTACT' },
-  { section: 'achievements', label: 'CITATIONS' },
+  { section: 'achievements', label: 'ACHIEVEMENTS' },
 ];
 
 function SectionContent({ section }: { section: SectionId }) {
   if (section === 'projects' && projectDetails.length > 0) {
     return <div className="content-list">{projectDetails.map((project) => (
-      <article className="content-entry" key={project.name}>
-        <h3>{project.name}</h3>
+      <article className={`content-entry${project.featured ? ' featured-project' : ''}`} key={project.name}>
+        <div className="project-heading">
+          <h3>{project.name}</h3>
+          <span className="project-stage">{project.stage}</span>
+        </div>
         <p>{project.summary}</p>
         <p className="tech-line">{project.technologies.join(' / ')}</p>
+        {project.result && <p className="project-result">{project.result}</p>}
         <div className="entry-links">
-          {project.github && <a href={project.github} target="_blank" rel="noreferrer">GITHUB ↗</a>}
           {project.demo && <a href={project.demo} target="_blank" rel="noreferrer">LIVE DEMO ↗</a>}
         </div>
       </article>
     ))}</div>;
   }
 
-  if (section === 'skills' && skillDetails.length > 0) {
-    return <ul className="detail-list">{skillDetails.map((skill) => <li key={skill}>{skill}</li>)}</ul>;
+  if (section === 'skills') {
+    return (
+      <div className="skills-content">
+        <h3 className="stack-heading">CURRENT STACK</h3>
+        <div className="skill-groups">
+          {currentStack.map((group) => (
+            <section className="skill-group" key={group.category}>
+              <h3>{group.category}</h3>
+              <p>{group.items.join(' · ')}</p>
+            </section>
+          ))}
+        </div>
+        <section className="learning-group">
+          <h3>CURRENTLY LEARNING</h3>
+          <p>{learningFocus.join(' · ')}</p>
+        </section>
+        <section className="focus-group">
+          <h3>ENGINEERING FOCUS</h3>
+          <p>{focusAreas.join(' · ')}</p>
+        </section>
+      </div>
+    );
   }
-  if (section === 'achievements' && achievementDetails.length > 0) {
+  if (section === 'achievements') {
     return <ul className="detail-list">{achievementDetails.map((item) => <li key={item}>{item}</li>)}</ul>;
   }
-  if (section === 'about' && educationDetails.length > 0) {
-    return <ul className="detail-list">{educationDetails.map((item) => <li key={item}>{item}</li>)}</ul>;
+  if (section === 'about') {
+    return (
+      <div className="about-content">
+        <p className="about-summary">{profile.about}</p>
+        <ul className="detail-list">{educationDetails.map((item) => <li key={item}>{item}</li>)}</ul>
+        <section className="journey">
+          <h3>ENGINEERING JOURNEY</h3>
+          {engineeringJourney.map((step) => (
+            <p key={`${step.phase}-${step.focus}`}><span>{step.phase}</span>{step.focus}</p>
+          ))}
+        </section>
+        <section className="philosophy">
+          <h3>{philosophy.statement}</h3>
+          <p>{philosophy.description}</p>
+        </section>
+      </div>
+    );
   }
-  if (section === 'contact' && contactDetails.length > 0) {
+  if (section === 'contact') {
     return <ul className="detail-list">{contactDetails.map((item) => (
       <li key={item.label}>
         <span>{item.label}</span>
@@ -118,7 +171,7 @@ export default function App() {
       <header className="topbar">
         <div className="identity">
           <span className="wordmark">BR<span className="red-dot">.</span></span>
-          <span className="identity-caption">BHARAT RAI <i>//</i> PERSONAL ARCHIVE</span>
+          <span className="identity-caption">{profile.name.toUpperCase()} <i>//</i> PERSONAL ARCHIVE</span>
         </div>
         <div className="system-state"><span className="status-light" /> SYSTEM ONLINE</div>
       </header>
@@ -126,9 +179,10 @@ export default function App() {
       <section className="intro" aria-label="Portfolio introduction">
         <p className="eyebrow"><span className="crosshair">+</span> FIELD RECORD // 0001</p>
         <h1>BHARAT<br />RAI<span className="red-dot">.</span></h1>
-        <p className="role">AI / ML ENGINEER<br />BACKEND ENGINEER</p>
+        <p className="role">{profile.primaryTitle}<br />{profile.secondaryTitle}</p>
+        <p className="student-status">{profile.status} · {profile.specialization}</p>
         <div className="intro-rule" />
-        <p className="tagline">Build intelligent systems.<br />Build backend infrastructure.</p>
+        <p className="tagline">{profile.statement}</p>
       </section>
 
       <div className="scene-caption" aria-hidden="true">
@@ -159,7 +213,7 @@ export default function App() {
           </div>
           <p className="panel-description">{sectionCopy[activeSection].description}</p>
           <SectionContent section={activeSection} />
-          <div className="panel-footer"><span>BHARAT RAI</span><span>END OF RECORD <b>■</b></span></div>
+          <div className="panel-footer"><span>{profile.name.toUpperCase()} · 2026</span><span>END OF RECORD <b>■</b></span></div>
         </aside>
       )}
 
@@ -179,7 +233,7 @@ export default function App() {
               ref={item.section === 'home' ? homeButton : undefined}
             >
               <span className="nav-number">{String(index + 1).padStart(2, '0')}</span>
-              <span className="nav-label">{item.label}</span>
+              <span className="nav-label">{item.section === 'achievements' ? 'ACHIEVEMENTS' : item.label}</span>
               {active && <span className="nav-indicator" />}
             </button>
           );
