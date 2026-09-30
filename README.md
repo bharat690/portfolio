@@ -4,8 +4,9 @@ A single-screen, interactive Three.js portfolio built with React Three Fiber.
 The hero figure is reconstructed from high-resolution, transparent layers
 derived from `reference/bharat_ghost.png`, which remains unchanged. Those
 layers are curved, subdivided Three.js relief meshes with a separately rigged
-head and cursor-tracked pupils. The five navigational artifacts are modeled
-procedurally in the project; no external 3D models are required.
+head, flexing procedural neck, and cursor-tracked pupils. The five navigational
+artifacts are modeled procedurally in the project; no external 3D models are
+required.
 
 ## Run locally
 
@@ -25,7 +26,7 @@ inventing portfolio claims.
 
 ## Structure
 
-- `src/scene/character/` — reference-textured head/body layers and cursor attention
+- `src/scene/character/` — reference-textured relief layers, articulated neck, and cursor attention
 - `public/character/` — transparent, source-resolution head and upper-body textures
 - `src/scene/artifacts/` — independently modeled medal, badge, magazine, knife, and radio
 - `src/scene/PortfolioScene.tsx` — camera, responsive composition, and scene state wiring

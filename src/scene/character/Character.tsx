@@ -13,6 +13,12 @@ type ReliefProfile = 'head' | 'body';
 
 const sourceScale = 0.00435;
 const portraitCenter = new THREE.Vector2(448, 600);
+const headPivotSourceY = 520;
+const headPivotY = (portraitCenter.y - headPivotSourceY) * sourceScale;
+const neckBaseY = 0.045;
+const neckBaseZ = 0.43;
+const neckRadialSegments = 24;
+const neckLengthSegments = 18;
 const pupilGeometry = new THREE.SphereGeometry(0.023, 20, 14);
 const pupilMaterial = new THREE.MeshPhysicalMaterial({
   color: '#0a0908',
@@ -27,6 +33,17 @@ const bustMaterial = new THREE.MeshStandardMaterial({
   color: '#090a0a',
   roughness: 0.8,
   metalness: 0.06,
+});
+const neckMaterial = new THREE.MeshStandardMaterial({
+  color: '#111211',
+  roughness: 0.98,
+  metalness: 0.02,
+  side: THREE.DoubleSide,
+});
+const neckCollarMaterial = new THREE.MeshStandardMaterial({
+  color: '#22231f',
+  roughness: 0.9,
+  metalness: 0.08,
 });
 
 function gaussian(value: number, center: number, spread: number): number {
@@ -103,6 +120,67 @@ function createBustShell(profile: ReliefProfile): THREE.BufferGeometry {
   });
 }
 
+function createNeckGeometry(): THREE.BufferGeometry {
+  const geometry = new THREE.BufferGeometry();
+  const ringCount = neckLengthSegments + 1;
+  const positions = new Float32Array(ringCount * neckRadialSegments * 3);
+  const indices: number[] = [];
+
+  for (let ring = 0; ring < neckLengthSegments; ring += 1) {
+    for (let side = 0; side < neckRadialSegments; side += 1) {
+      const start = ring * neckRadialSegments + side;
+      const nextRing = start + neckRadialSegments;
+      const nextSide = ring * neckRadialSegments + ((side + 1) % neckRadialSegments);
+      const nextRingSide = (ring + 1) * neckRadialSegments + ((side + 1) % neckRadialSegments);
+      indices.push(start, nextRing, nextSide, nextRing, nextRingSide, nextSide);
+    }
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
+  geometry.setIndex(indices);
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function deformNeck(geometry: THREE.BufferGeometry, base: THREE.Vector3, top: THREE.Vector3): void {
+  const positions = geometry.attributes.position as THREE.BufferAttribute;
+
+  for (let ring = 0; ring <= neckLengthSegments; ring += 1) {
+    const t = ring / neckLengthSegments;
+    const oneMinusT = 1 - t;
+    const centerX = oneMinusT * oneMinusT * oneMinusT * base.x
+      + 3 * oneMinusT * oneMinusT * t * (base.x)
+      + 3 * oneMinusT * t * t * (top.x)
+      + t * t * t * top.x;
+    const centerY = oneMinusT * oneMinusT * oneMinusT * base.y
+      + 3 * oneMinusT * oneMinusT * t * (base.y + 0.12)
+      + 3 * oneMinusT * t * t * (top.y - 0.08)
+      + t * t * t * top.y;
+    const centerZ = oneMinusT * oneMinusT * oneMinusT * base.z
+      + 3 * oneMinusT * oneMinusT * t * (base.z - 0.015)
+      + 3 * oneMinusT * t * t * (top.z - 0.025)
+      + t * t * t * top.z;
+    const endTaper = 0.9 + Math.sin(Math.PI * t) * 0.1;
+    const pleat = 1 + Math.cos(t * Math.PI * 12) * Math.sin(Math.PI * t) * 0.018;
+    const radiusX = (0.19 + t * 0.025) * endTaper * pleat;
+    const radiusZ = (0.15 + t * 0.025) * endTaper * pleat;
+
+    for (let side = 0; side < neckRadialSegments; side += 1) {
+      const angle = (side / neckRadialSegments) * Math.PI * 2;
+      const vertex = ring * neckRadialSegments + side;
+      positions.setXYZ(
+        vertex,
+        centerX + Math.cos(angle) * radiusX,
+        centerY,
+        centerZ + Math.sin(angle) * radiusZ,
+      );
+    }
+  }
+
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+}
+
 function PortraitLayer({
   texture,
   width,
@@ -167,6 +245,14 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
   const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const eyesRef = useRef<THREE.Group>(null);
+  const neckRef = useRef<THREE.Mesh>(null);
+  const neckGeometry = useMemo(createNeckGeometry, []);
+  const neckTopRef = useRef(new THREE.Vector3());
+  const neckTopOffsetRef = useRef(new THREE.Vector3(0, -0.06, 0.22));
+  const neckOffsetScratchRef = useRef(new THREE.Vector3());
+  const neckEulerRef = useRef(new THREE.Euler());
+  const neckPoseRef = useRef(new THREE.Vector2());
+  const neckBaseRef = useRef(new THREE.Vector3(0, neckBaseY, neckBaseZ));
 
   useEffect(() => {
     const anisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), 8);
@@ -200,6 +286,17 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
 
     head.rotation.y = THREE.MathUtils.damp(head.rotation.y, targetX * 0.23 * movement, 5, delta);
     head.rotation.x = THREE.MathUtils.damp(head.rotation.x, -targetY * 0.105 * movement, 5, delta);
+    neckPoseRef.current.x = THREE.MathUtils.damp(neckPoseRef.current.x, head.rotation.y * 0.72, 4, delta);
+    neckPoseRef.current.y = THREE.MathUtils.damp(neckPoseRef.current.y, head.rotation.x * 0.7, 4, delta);
+
+    if (neckRef.current) {
+      neckEulerRef.current.set(neckPoseRef.current.y, neckPoseRef.current.x, 0, 'YXZ');
+      neckTopRef.current
+        .set(head.position.x, headPivotY - 0.04, dimensions.depth + 0.018)
+        .add(neckOffsetScratchRef.current.copy(neckTopOffsetRef.current).applyEuler(neckEulerRef.current));
+      neckBaseRef.current.y = body.position.y + neckBaseY;
+      deformNeck(neckGeometry, neckBaseRef.current, neckTopRef.current);
+    }
 
     if (eyesRef.current) {
       eyesRef.current.position.x = THREE.MathUtils.damp(eyesRef.current.position.x, targetX * 0.035 * movement, 9, delta);
@@ -209,7 +306,7 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
 
   const scaleRatio = dimensions.unit / sourceScale;
   const headX = (452.5 - portraitCenter.x) * sourceScale;
-  const headY = (portraitCenter.y - 330) * sourceScale;
+  const headY = (portraitCenter.y - 287.5) * sourceScale;
   const bodyY = (portraitCenter.y - 877.5) * sourceScale;
 
   return (
@@ -226,20 +323,37 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
           profile="body"
         />
       </group>
-      <group ref={headRef} name="bharat-head" position={[headX, headY - 0.04, dimensions.depth + 0.018]}>
+      <mesh
+        ref={neckRef}
+        name="bharat-articulated-neck"
+        geometry={neckGeometry}
+        material={neckMaterial}
+        frustumCulled={false}
+        castShadow
+        receiveShadow
+      />
+      <mesh position={[0, neckBaseY + 0.006, neckBaseZ]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[0.19, 0.025, 8, 28]} />
+        <primitive object={neckCollarMaterial} attach="material" />
+      </mesh>
+      <group
+        ref={headRef}
+        name="bharat-head"
+        position={[headX, headPivotY - 0.04, dimensions.depth + 0.018]}
+      >
         <PortraitLayer
           texture={headTexture}
           width={515}
-          height={660}
+          height={575}
           x={0}
-          y={0}
+          y={headY - headPivotY}
           z={0}
           order={2}
           profile="head"
         />
         <group ref={eyesRef} name="bharat-eyes" position={[0, 0, 0.31]}>
           {[-0.18, 0.30].map((x) => (
-            <group key={x} position={[x, -0.17, 0]}>
+            <group key={x} position={[x, -0.315, 0]}>
               <mesh geometry={pupilGeometry} material={pupilMaterial} scale={[1, 1, 0.42]} />
               <mesh geometry={pupilGlintGeometry} material={pupilGlintMaterial} position={[-0.006, 0.009, 0.019]} />
             </group>
