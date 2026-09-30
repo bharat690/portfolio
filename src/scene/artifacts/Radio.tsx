@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-const shell = new THREE.MeshStandardMaterial({ color: '#202222', metalness: 0.28, roughness: 0.76 });
-const rubber = new THREE.MeshStandardMaterial({ color: '#090a0a', roughness: 0.92 });
+const shell = new THREE.MeshStandardMaterial({ color: '#454744', metalness: 0.2, roughness: 0.72 });
+const rubber = new THREE.MeshStandardMaterial({ color: '#20211f', roughness: 0.88 });
 const screen = new THREE.MeshStandardMaterial({ color: '#32291d', emissive: '#291207', emissiveIntensity: 0.4, roughness: 0.52 });
 
 export function Radio() {

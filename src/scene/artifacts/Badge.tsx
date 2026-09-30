@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-const steel = new THREE.MeshStandardMaterial({ color: '#74716a', metalness: 0.78, roughness: 0.52 });
-const black = new THREE.MeshStandardMaterial({ color: '#131414', metalness: 0.48, roughness: 0.62 });
+const steel = new THREE.MeshStandardMaterial({ color: '#aaa79e', metalness: 0.62, roughness: 0.48 });
+const black = new THREE.MeshStandardMaterial({ color: '#252523', metalness: 0.35, roughness: 0.68 });
 
 function shieldShape() {
   const shape = new THREE.Shape();

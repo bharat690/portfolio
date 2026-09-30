@@ -270,7 +270,7 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
   }, [bodyTexture, gl, headTexture]);
 
   const dimensions = compact
-    ? { unit: 0.004, depth: 0.16 }
+    ? { unit: 0.00325, depth: 0.16 }
     : { unit: sourceScale, depth: 0.12 };
 
   useFrame((state, delta) => {
@@ -360,7 +360,7 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
   const bodyY = (portraitCenter.y - 877.5) * sourceScale;
 
   return (
-    <group scale={scaleRatio}>
+    <group scale={scaleRatio} position={compact ? [-0.15, 0, 0] : [0, 0, 0]}>
       <group ref={bodyRef} name="bharat-upper-body" position={[0, -0.04, 0]}>
         <PortraitLayer
           texture={bodyTexture}

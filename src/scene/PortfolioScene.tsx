@@ -22,11 +22,12 @@ function SceneContents(props: PortfolioSceneProps) {
     () => artifacts.map((item) => compact
       ? {
           ...item,
-          position: item.id === 'medal' ? [1.28, 2, -0.48] as [number, number, number]
-            : item.id === 'badge' ? [-1.22, 0.4, -0.18] as [number, number, number]
-              : item.id === 'radio' ? [1.22, 0.62, 0.28] as [number, number, number]
-                : item.id === 'magazine' ? [-1.08, -1.28, -0.7] as [number, number, number]
-                  : [1.08, -1.3, 0.45] as [number, number, number],
+          position: item.id === 'medal' ? [2.1, 1.75, -0.48] as [number, number, number]
+            : item.id === 'badge' ? [-2.1, -1.15, 0.3] as [number, number, number]
+              : item.id === 'radio' ? [2.1, 0.62, 0.28] as [number, number, number]
+                : item.id === 'magazine' ? [2.1, -1.5, -0.7] as [number, number, number]
+                  : [2.1, -0.4, 0.45] as [number, number, number],
+          rotation: item.id === 'knife' ? [0, -0.08, 1.48] as [number, number, number] : item.rotation,
         }
       : item),
     [compact],

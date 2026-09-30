@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const brass = new THREE.MeshStandardMaterial({ color: '#655638', metalness: 0.62, roughness: 0.66 });
+const brass = new THREE.MeshStandardMaterial({ color: '#a58d61', metalness: 0.54, roughness: 0.58 });
 const dark = new THREE.MeshStandardMaterial({ color: '#101111', metalness: 0.3, roughness: 0.82 });
 
 export function Medal() {

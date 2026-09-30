@@ -104,7 +104,7 @@ export function ArtifactItem({ artifact, hovered, selected, reducedMotion, onHov
     if (focusLightRef.current) {
       focusLightRef.current.intensity = THREE.MathUtils.damp(
         focusLightRef.current.intensity,
-        selected ? 0.3 : hovered ? 0.2 : 0,
+        selected ? 1.1 : hovered ? 0.82 : 0.34,
         5,
         delta,
       );
@@ -156,10 +156,10 @@ export function ArtifactItem({ artifact, hovered, selected, reducedMotion, onHov
       </mesh>
       <pointLight
         ref={focusLightRef}
-        position={[0, 0.12, 0.38]}
-        color="#8e1111"
-        intensity={0}
-        distance={1.4}
+        position={[0, 0.12, 0.46]}
+        color="#c9c3b7"
+        intensity={0.34}
+        distance={1.9}
         decay={2}
       />
     </group>

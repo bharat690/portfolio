@@ -81,10 +81,10 @@ export default function App() {
     setSelectedArtifact(artifacts.find((item) => item.section === section)?.id ?? null);
   };
 
-  const closePanel = () => {
+  const closePanel = (restoreFocus = true) => {
     setSelectedArtifact(null);
     setActiveSection('home');
-    homeButton.current?.focus();
+    if (restoreFocus) homeButton.current?.focus();
   };
 
   useEffect(() => {
@@ -142,13 +142,18 @@ export default function App() {
       <p className="keyboard-hint">TAB TO NAVIGATE <span>·</span> ENTER TO OPEN <span>·</span> ESC TO CLOSE</p>
 
       {selected && (
-        <aside className="artifact-panel" aria-labelledby="panel-title" aria-live="polite">
+        <aside
+          className={`artifact-panel${selected.position[0] > 0 ? ' panel-left' : ''}${selected.position[1] < 0 ? ' panel-top' : ''}`}
+          aria-labelledby="panel-title"
+          aria-live="polite"
+          onPointerLeave={() => closePanel(false)}
+        >
           <div className="panel-header">
             <div>
               <p className="panel-code">{selected.category} <span>// {selected.index}</span></p>
               <h2 id="panel-title">{sectionCopy[activeSection].title}</h2>
             </div>
-            <button className="close-button" type="button" onClick={closePanel} aria-label="Close portfolio panel">
+            <button className="close-button" type="button" onClick={() => closePanel()} aria-label="Close portfolio panel">
               <span aria-hidden="true">×</span><small>ESC</small>
             </button>
           </div>

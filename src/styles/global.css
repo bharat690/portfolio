@@ -415,6 +415,11 @@ a:focus-visible {
   animation: panel-in 230ms ease-out both;
 }
 
+.artifact-panel.panel-left {
+  right: auto;
+  left: 8.5%;
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -576,6 +581,11 @@ a:focus-visible {
     right: 5%;
     width: min(365px, 40vw);
   }
+
+  .artifact-panel.panel-left {
+    right: auto;
+    left: 5%;
+  }
 }
 
 @media (max-width: 640px) {
@@ -683,6 +693,16 @@ a:focus-visible {
     padding: 15px 17px 12px;
     transform: none;
     animation-name: panel-in-mobile;
+  }
+
+  .artifact-panel.panel-left {
+    right: 14px;
+    left: 14px;
+  }
+
+  .artifact-panel.panel-top {
+    top: 80px;
+    bottom: auto;
   }
 
   .panel-header h2 {

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-const blade = new THREE.MeshStandardMaterial({ color: '#77766f', metalness: 0.62, roughness: 0.42 });
-const handle = new THREE.MeshStandardMaterial({ color: '#171818', metalness: 0.18, roughness: 0.91 });
+const blade = new THREE.MeshStandardMaterial({ color: '#b6b3aa', metalness: 0.58, roughness: 0.38 });
+const handle = new THREE.MeshStandardMaterial({ color: '#292a29', metalness: 0.12, roughness: 0.84 });
 
 function bladeShape() {
   const shape = new THREE.Shape();

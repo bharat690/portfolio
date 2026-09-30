@@ -18,7 +18,7 @@ export const artifacts: Artifact[] = [
     section: 'achievements',
     category: 'ACHIEVEMENTS',
     index: '01',
-    position: [1.28, 2.15, -0.48],
+    position: [3.05, 1.95, -0.48],
     rotation: [0, 0, -0.12],
   },
   {
@@ -27,7 +27,7 @@ export const artifacts: Artifact[] = [
     section: 'about',
     category: 'IDENTITY // EDUCATION',
     index: '02',
-    position: [-2.05, 1.1, -0.18],
+    position: [-2.55, -1.55, -0.18],
     rotation: [0, -0.12, 0.1],
   },
   {
@@ -36,7 +36,7 @@ export const artifacts: Artifact[] = [
     section: 'contact',
     category: 'CONTACT',
     index: '05',
-    position: [2.05, 1.05, 0.28],
+    position: [3.1, 0.65, 0.28],
     rotation: [0, -0.2, -0.08],
   },
   {
@@ -45,7 +45,7 @@ export const artifacts: Artifact[] = [
     section: 'projects',
     category: 'PROJECTS',
     index: '03',
-    position: [-1.95, -1.55, -0.7],
+    position: [2.8, -1.7, -0.7],
     rotation: [0.08, 0.1, 0.18],
   },
   {
@@ -54,7 +54,7 @@ export const artifacts: Artifact[] = [
     section: 'skills',
     category: 'SKILLS // TOOLS',
     index: '04',
-    position: [1.95, -1.58, 0.45],
+    position: [3.1, -0.65, 0.45],
     rotation: [0, -0.08, -0.48],
   },
 ];
