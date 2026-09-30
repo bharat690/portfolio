@@ -305,18 +305,18 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
 
     head.rotation.y = THREE.MathUtils.damp(
       head.rotation.y,
-      THREE.MathUtils.clamp(targetYaw * 0.62, -0.3, 0.3) * movement + idleSway,
-      4.5,
+      THREE.MathUtils.clamp(targetYaw * 0.52, -0.26, 0.26) * movement + idleSway,
+      5.5,
       delta,
     );
     head.rotation.x = THREE.MathUtils.damp(
       head.rotation.x,
-      THREE.MathUtils.clamp(-targetPitch * 0.6, -0.18, 0.18) * movement,
-      4.5,
+      THREE.MathUtils.clamp(-targetPitch * 0.5, -0.15, 0.15) * movement,
+      5.5,
       delta,
     );
-    neckPoseRef.current.x = THREE.MathUtils.damp(neckPoseRef.current.x, head.rotation.y * 0.46, 4, delta);
-    neckPoseRef.current.y = THREE.MathUtils.damp(neckPoseRef.current.y, head.rotation.x * 0.45, 4, delta);
+    neckPoseRef.current.x = THREE.MathUtils.damp(neckPoseRef.current.x, head.rotation.y * 0.44, 6, delta);
+    neckPoseRef.current.y = THREE.MathUtils.damp(neckPoseRef.current.y, head.rotation.x * 0.44, 6, delta);
 
     if (neckRef.current) {
       neckEulerRef.current.set(neckPoseRef.current.y, neckPoseRef.current.x, 0, 'YXZ');

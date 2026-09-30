@@ -108,10 +108,38 @@ export default function App() {
   const reducedMotion = useReducedMotion();
   const homeButton = useRef<HTMLButtonElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
+  const panelDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const panelPointerInside = useRef(false);
+  const selectedFromArtifact = useRef(false);
 
   const hovered = useMemo(() => artifacts.find((item) => item.id === hoveredArtifact), [hoveredArtifact]);
   const selected = useMemo(() => artifacts.find((item) => item.id === selectedArtifact), [selectedArtifact]);
   const cursorArtifact = selected ?? hovered;
+
+  const cancelPanelDismiss = () => {
+    if (panelDismissTimer.current !== null) {
+      clearTimeout(panelDismissTimer.current);
+      panelDismissTimer.current = null;
+    }
+  };
+
+  const dismissPanelSoon = () => {
+    cancelPanelDismiss();
+    panelDismissTimer.current = setTimeout(() => {
+      panelDismissTimer.current = null;
+      if (!panelPointerInside.current) closePanel(false);
+    }, 450);
+  };
+
+  useEffect(() => () => {
+    if (panelDismissTimer.current !== null) clearTimeout(panelDismissTimer.current);
+  }, []);
+
+  const handleArtifactHover = (id: ArtifactId | null) => {
+    setHoveredArtifact(id);
+    if (id === selectedArtifact) cancelPanelDismiss();
+    else if (id === null && selectedFromArtifact.current) dismissPanelSoon();
+  };
 
   useEffect(() => {
     const followPointer = (event: PointerEvent) => {
@@ -125,16 +153,23 @@ export default function App() {
   const openArtifact = (id: ArtifactId) => {
     const artifact = artifacts.find((item) => item.id === id);
     if (!artifact) return;
+    cancelPanelDismiss();
+    selectedFromArtifact.current = true;
     setActiveSection(artifact.section);
     setSelectedArtifact(id);
   };
 
   const activateSection = (section: SectionId) => {
+    cancelPanelDismiss();
+    selectedFromArtifact.current = false;
     setActiveSection(section);
     setSelectedArtifact(artifacts.find((item) => item.section === section)?.id ?? null);
   };
 
   const closePanel = (restoreFocus = true) => {
+    cancelPanelDismiss();
+    panelPointerInside.current = false;
+    selectedFromArtifact.current = false;
     setSelectedArtifact(null);
     setActiveSection('home');
     if (restoreFocus) homeButton.current?.focus();
@@ -154,7 +189,7 @@ export default function App() {
         <PortfolioScene
           hoveredArtifact={hoveredArtifact}
           selectedArtifact={selectedArtifact}
-          onHoverArtifact={setHoveredArtifact}
+          onHoverArtifact={handleArtifactHover}
           onSelectArtifact={openArtifact}
           reducedMotion={reducedMotion}
         />
@@ -200,7 +235,15 @@ export default function App() {
           className={`artifact-panel${selected.position[0] > 0 ? ' panel-left' : ''}${selected.position[1] < 0 ? ' panel-top' : ''}`}
           aria-labelledby="panel-title"
           aria-live="polite"
-          onPointerLeave={() => closePanel(false)}
+          onPointerEnter={() => {
+            panelPointerInside.current = true;
+            cancelPanelDismiss();
+          }}
+          onPointerLeave={() => {
+            panelPointerInside.current = false;
+            if (selectedFromArtifact.current) dismissPanelSoon();
+            else closePanel(false);
+          }}
         >
           <div className="panel-header">
             <div>
@@ -227,8 +270,8 @@ export default function App() {
               type="button"
               className={`nav-item${active ? ' active' : ''}`}
               onClick={() => activateSection(item.section)}
-              onMouseEnter={() => artifact && setHoveredArtifact(artifact.id)}
-              onMouseLeave={() => artifact && setHoveredArtifact(null)}
+              onMouseEnter={() => artifact && handleArtifactHover(artifact.id)}
+              onMouseLeave={() => artifact && handleArtifactHover(null)}
               aria-pressed={active}
               ref={item.section === 'home' ? homeButton : undefined}
             >
