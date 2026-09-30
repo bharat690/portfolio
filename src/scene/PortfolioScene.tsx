@@ -22,11 +22,11 @@ function SceneContents(props: PortfolioSceneProps) {
     () => artifacts.map((item) => compact
       ? {
           ...item,
-          position: item.id === 'medal' ? [1.28, 2, 0.15] as [number, number, number]
-            : item.id === 'badge' ? [-1.22, 0.4, 0.15] as [number, number, number]
-              : item.id === 'radio' ? [1.22, 0.62, 0.15] as [number, number, number]
-                : item.id === 'magazine' ? [-1.08, -1.28, 0.15] as [number, number, number]
-                  : [1.08, -1.3, 0.15] as [number, number, number],
+          position: item.id === 'medal' ? [1.28, 2, -0.48] as [number, number, number]
+            : item.id === 'badge' ? [-1.22, 0.4, -0.18] as [number, number, number]
+              : item.id === 'radio' ? [1.22, 0.62, 0.28] as [number, number, number]
+                : item.id === 'magazine' ? [-1.08, -1.28, -0.7] as [number, number, number]
+                  : [1.08, -1.3, 0.45] as [number, number, number],
         }
       : item),
     [compact],
@@ -35,31 +35,40 @@ function SceneContents(props: PortfolioSceneProps) {
     () => positionedArtifacts.find((item) => item.id === (props.selectedArtifact ?? props.hoveredArtifact)),
     [positionedArtifacts, props.selectedArtifact, props.hoveredArtifact],
   );
-  const focus: [number, number] | null = focusArtifact
-    ? [THREE.MathUtils.clamp(focusArtifact.position[0] / 2.25, -1, 1), THREE.MathUtils.clamp((focusArtifact.position[1] - 0.2) / 2.4, -1, 1)]
+  const selectedArtifact = props.selectedArtifact
+    ? positionedArtifacts.find((item) => item.id === props.selectedArtifact)
+    : null;
+  const attentionTarget: [number, number, number] | null = focusArtifact
+    ? [...focusArtifact.position]
     : null;
 
   useFrame((_, delta) => {
     const motion = props.reducedMotion ? 0.14 : 1;
-    const cameraDistance = compact ? 12 : 9;
+    const cameraDistance = (compact ? 12 : 9) - (selectedArtifact ? 0.12 : 0);
     camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraDistance, 2, delta);
-    const targetX = focusArtifact ? focusArtifact.position[0] * 0.045 : pointer.x * 0.11 * motion;
-    const targetY = focusArtifact ? 0.05 + focusArtifact.position[1] * 0.018 : 0.05 + pointer.y * 0.055 * motion;
+    const artifactWeight = selectedArtifact ? 0.045 : focusArtifact ? 0.025 : 0;
+    const targetX = focusArtifact
+      ? focusArtifact.position[0] * artifactWeight
+      : pointer.x * 0.11 * motion;
+    const targetY = focusArtifact
+      ? focusArtifact.position[1] * artifactWeight
+      : pointer.y * 0.055 * motion;
     camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 1.7, delta);
     camera.position.y = THREE.MathUtils.damp(camera.position.y, 0.25 + targetY, 1.7, delta);
     cameraTarget.current.set(targetX * 0.32, targetY, 0);
     camera.lookAt(cameraTarget.current);
+
   });
 
   return (
     <>
       <Environment reducedMotion={props.reducedMotion} compact={compact} />
-      <Character focus={focus} reducedMotion={props.reducedMotion} compact={compact} />
+      <Character attentionTarget={attentionTarget} reducedMotion={props.reducedMotion} compact={compact} />
       {positionedArtifacts.map((artifact) => (
         <ArtifactItem
           key={artifact.id}
           artifact={artifact}
-          hovered={props.hoveredArtifact === artifact.id}
+          hovered={!props.selectedArtifact && props.hoveredArtifact === artifact.id}
           selected={props.selectedArtifact === artifact.id}
           reducedMotion={props.reducedMotion}
           onHover={props.onHoverArtifact}

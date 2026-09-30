@@ -72,6 +72,59 @@ a:focus-visible {
   touch-action: manipulation;
 }
 
+.attention-cursor {
+  --cursor-x: -24px;
+  --cursor-y: -24px;
+  position: fixed;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: #e8e4db;
+  pointer-events: none;
+  transform: translate3d(var(--cursor-x), var(--cursor-y), 0) translate(-50%, -50%);
+  transition: color 160ms ease;
+}
+
+.attention-cursor::before {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(221, 216, 204, 0.5);
+  content: '';
+  transform: rotate(45deg);
+  transition: border-color 160ms ease, inset 160ms ease;
+}
+
+.cursor-glyph {
+  z-index: 1;
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 6px #050505;
+}
+
+.cursor-label {
+  position: absolute;
+  top: 23px;
+  left: 18px;
+  color: #e8e4db;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px #050505;
+}
+
+.attention-cursor.is-targeted {
+  color: #e62727;
+}
+
+.attention-cursor.is-targeted::before {
+  inset: 1px;
+  border-color: rgba(230, 39, 39, 0.85);
+}
+
 .grain {
   position: absolute;
   inset: 0;
@@ -691,5 +744,11 @@ a:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (pointer: coarse) {
+  .attention-cursor {
+    display: none;
   }
 }

@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 function createDust(count: number) {
@@ -43,6 +44,19 @@ const redHaze = createRedHaze();
 
 export function Environment({ reducedMotion, compact }: { reducedMotion: boolean; compact: boolean }) {
   const dust = useMemo(() => createDust(reducedMotion || compact ? 90 : 180), [reducedMotion, compact]);
+  const dustRef = useRef<THREE.Points>(null);
+
+  useFrame((state, delta) => {
+    const points = dustRef.current;
+    if (!points || reducedMotion) return;
+    points.position.y = THREE.MathUtils.damp(
+      points.position.y,
+      Math.sin(state.clock.elapsedTime * 0.12) * 0.045,
+      0.8,
+      delta,
+    );
+    points.rotation.y = Math.sin(state.clock.elapsedTime * 0.08) * 0.012;
+  });
 
   return (
     <>
@@ -60,7 +74,7 @@ export function Environment({ reducedMotion, compact }: { reducedMotion: boolean
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={redHaze} transparent depthWrite={false} toneMapped={false} fog={false} />
       </mesh>
-      <points>
+      <points ref={dustRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[dust, 3]} />
         </bufferGeometry>

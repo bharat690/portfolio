@@ -54,9 +54,20 @@ export default function App() {
   const [hoveredArtifact, setHoveredArtifact] = useState<ArtifactId | null>(null);
   const reducedMotion = useReducedMotion();
   const homeButton = useRef<HTMLButtonElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
 
   const hovered = useMemo(() => artifacts.find((item) => item.id === hoveredArtifact), [hoveredArtifact]);
   const selected = useMemo(() => artifacts.find((item) => item.id === selectedArtifact), [selectedArtifact]);
+  const cursorArtifact = selected ?? hovered;
+
+  useEffect(() => {
+    const followPointer = (event: PointerEvent) => {
+      cursorRef.current?.style.setProperty('--cursor-x', `${event.clientX}px`);
+      cursorRef.current?.style.setProperty('--cursor-y', `${event.clientY}px`);
+    };
+    window.addEventListener('pointermove', followPointer, { passive: true });
+    return () => window.removeEventListener('pointermove', followPointer);
+  }, []);
 
   const openArtifact = (id: ArtifactId) => {
     const artifact = artifacts.find((item) => item.id === id);
@@ -96,6 +107,14 @@ export default function App() {
         />
       </Suspense>
       <div className="grain" aria-hidden="true" />
+      <div
+        ref={cursorRef}
+        className={`attention-cursor${cursorArtifact ? ' is-targeted' : ''}`}
+        aria-hidden="true"
+      >
+        <span className="cursor-glyph">{cursorArtifact ? '◉' : '+'}</span>
+        {cursorArtifact && <span className="cursor-label">{cursorArtifact.label}</span>}
+      </div>
       <header className="topbar">
         <div className="identity">
           <span className="wordmark">BR<span className="red-dot">.</span></span>
@@ -117,7 +136,7 @@ export default function App() {
       </div>
       <div className="interaction-hint">
         <span className="hint-mark">⌖</span>
-        <span>{hovered ? `${hovered.label} // ${hovered.category}` : 'MOVE // LOOK // INTERACT'}</span>
+        <span>{cursorArtifact ? `${cursorArtifact.label} // ${cursorArtifact.category}` : 'MOVE // LOOK // INTERACT'}</span>
         <span className="hint-line" />
       </div>
       <p className="keyboard-hint">TAB TO NAVIGATE <span>·</span> ENTER TO OPEN <span>·</span> ESC TO CLOSE</p>

@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { portraitContours } from './portraitContours';
 
 interface CharacterProps {
-  focus: [number, number] | null;
+  attentionTarget: [number, number, number] | null;
   reducedMotion: boolean;
   compact: boolean;
 }
@@ -13,6 +13,7 @@ type ReliefProfile = 'head' | 'body';
 
 const sourceScale = 0.00435;
 const portraitCenter = new THREE.Vector2(448, 600);
+const cursorPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.5);
 const headPivotSourceY = 520;
 const headPivotY = (portraitCenter.y - headPivotSourceY) * sourceScale;
 const neckBaseY = 0.045;
@@ -236,12 +237,12 @@ function PortraitLayer({
   );
 }
 
-export function Character({ focus, reducedMotion, compact }: CharacterProps) {
+export function Character({ attentionTarget, reducedMotion, compact }: CharacterProps) {
   const [headTexture, bodyTexture] = useLoader(THREE.TextureLoader, [
     '/character/bharat-head.png',
     '/character/bharat-upper-body.png',
   ]);
-  const { gl, pointer } = useThree();
+  const { gl, pointer, camera, raycaster } = useThree();
   const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const eyesRef = useRef<THREE.Group>(null);
@@ -253,6 +254,8 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
   const neckEulerRef = useRef(new THREE.Euler());
   const neckPoseRef = useRef(new THREE.Vector2());
   const neckBaseRef = useRef(new THREE.Vector3(0, neckBaseY, neckBaseZ));
+  const worldTargetRef = useRef(new THREE.Vector3());
+  const localTargetRef = useRef(new THREE.Vector3());
 
   useEffect(() => {
     const anisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), 8);
@@ -275,19 +278,55 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
     const head = headRef.current;
     if (!body || !head) return;
 
-    const targetX = THREE.MathUtils.clamp(focus?.[0] ?? pointer.x, -1, 1);
-    const targetY = THREE.MathUtils.clamp(focus?.[1] ?? pointer.y, -1, 1);
     const movement = reducedMotion ? 0.3 : 1;
     const breathing = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.8) * 0.006;
+    const idleSway = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.31) * 0.012;
+    raycaster.setFromCamera(pointer, camera);
+    const cursorPoint = raycaster.ray.intersectPlane(cursorPlane, worldTargetRef.current);
+
+    if (attentionTarget) {
+      worldTargetRef.current.set(...attentionTarget);
+    } else if (!cursorPoint) {
+      worldTargetRef.current.set(0, 0.5, 3);
+    }
 
     body.position.y = -0.04 + breathing;
-    body.rotation.y = THREE.MathUtils.damp(body.rotation.y, targetX * 0.018 * movement, 3, delta);
-    body.rotation.x = THREE.MathUtils.damp(body.rotation.x, -targetY * 0.009 * movement, 3, delta);
+    head.updateWorldMatrix(true, false);
+    localTargetRef.current.copy(worldTargetRef.current);
+    head.worldToLocal(localTargetRef.current);
+    const targetYaw = Math.atan2(localTargetRef.current.x, localTargetRef.current.z);
+    const targetPitch = Math.atan2(
+      localTargetRef.current.y,
+      Math.hypot(localTargetRef.current.x, localTargetRef.current.z),
+    );
 
-    head.rotation.y = THREE.MathUtils.damp(head.rotation.y, targetX * 0.23 * movement, 5, delta);
-    head.rotation.x = THREE.MathUtils.damp(head.rotation.x, -targetY * 0.105 * movement, 5, delta);
-    neckPoseRef.current.x = THREE.MathUtils.damp(neckPoseRef.current.x, head.rotation.y * 0.72, 4, delta);
-    neckPoseRef.current.y = THREE.MathUtils.damp(neckPoseRef.current.y, head.rotation.x * 0.7, 4, delta);
+    body.rotation.y = THREE.MathUtils.damp(
+      body.rotation.y,
+      THREE.MathUtils.clamp(targetYaw * 0.018, -0.012, 0.012) * movement,
+      2,
+      delta,
+    );
+    body.rotation.x = THREE.MathUtils.damp(
+      body.rotation.x,
+      THREE.MathUtils.clamp(-targetPitch * 0.012, -0.008, 0.008) * movement,
+      2,
+      delta,
+    );
+
+    head.rotation.y = THREE.MathUtils.damp(
+      head.rotation.y,
+      THREE.MathUtils.clamp(targetYaw * 0.62, -0.3, 0.3) * movement + idleSway,
+      4.5,
+      delta,
+    );
+    head.rotation.x = THREE.MathUtils.damp(
+      head.rotation.x,
+      THREE.MathUtils.clamp(-targetPitch * 0.6, -0.18, 0.18) * movement,
+      4.5,
+      delta,
+    );
+    neckPoseRef.current.x = THREE.MathUtils.damp(neckPoseRef.current.x, head.rotation.y * 0.46, 4, delta);
+    neckPoseRef.current.y = THREE.MathUtils.damp(neckPoseRef.current.y, head.rotation.x * 0.45, 4, delta);
 
     if (neckRef.current) {
       neckEulerRef.current.set(neckPoseRef.current.y, neckPoseRef.current.x, 0, 'YXZ');
@@ -299,8 +338,19 @@ export function Character({ focus, reducedMotion, compact }: CharacterProps) {
     }
 
     if (eyesRef.current) {
-      eyesRef.current.position.x = THREE.MathUtils.damp(eyesRef.current.position.x, targetX * 0.035 * movement, 9, delta);
-      eyesRef.current.position.y = THREE.MathUtils.damp(eyesRef.current.position.y, targetY * 0.027 * movement, 9, delta);
+      const idleEyeDrift = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.53) * 0.002;
+      eyesRef.current.position.x = THREE.MathUtils.damp(
+        eyesRef.current.position.x,
+        THREE.MathUtils.clamp(targetYaw * 0.16, -0.1, 0.1) * movement + idleEyeDrift,
+        9,
+        delta,
+      );
+      eyesRef.current.position.y = THREE.MathUtils.damp(
+        eyesRef.current.position.y,
+        THREE.MathUtils.clamp(targetPitch * 0.14, -0.08, 0.08) * movement,
+        9,
+        delta,
+      );
     }
   });
 
