@@ -127,9 +127,8 @@ function createNeckGeometry(): THREE.BufferGeometry {
     }
   }
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setIndex(indices);
-  geometry.computeBoundingSphere();
   return geometry;
 }
 
@@ -170,6 +169,23 @@ function deformNeck(geometry: THREE.BufferGeometry, base: THREE.Vector3, top: TH
 
   positions.needsUpdate = true;
   geometry.computeVertexNormals();
+}
+
+function createRestNeckGeometry(base: THREE.Vector3, top: THREE.Vector3): THREE.BufferGeometry {
+  const geometry = createNeckGeometry();
+  deformNeck(geometry, base, top);
+
+  const positions = geometry.attributes.position as THREE.BufferAttribute;
+  for (let index = 0; index < positions.count; index += 1) {
+    positions.setXYZ(
+      index,
+      positions.getX(index) - base.x,
+      positions.getY(index) - base.y,
+      positions.getZ(index) - base.z,
+    );
+  }
+  geometry.computeBoundingSphere();
+  return geometry;
 }
 
 function PortraitLayer({
@@ -229,21 +245,14 @@ function PortraitLayer({
 
 export function Character({ attentionTarget, reducedMotion, compact }: CharacterProps) {
   const [headTexture, bodyTexture] = useLoader(THREE.TextureLoader, [
-    '/character/bharat-head.png',
-    '/character/bharat-upper-body.png',
+    '/character/bharat-head.webp',
+    '/character/bharat-upper-body.webp',
   ]);
   const { gl, pointer, camera, raycaster } = useThree();
   const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const eyesRef = useRef<THREE.Group>(null);
-  const neckRef = useRef<THREE.Mesh>(null);
-  const neckGeometry = useMemo(createNeckGeometry, []);
-  const neckTopRef = useRef(new THREE.Vector3());
-  const neckTopOffsetRef = useRef(new THREE.Vector3(0, -0.06, 0.22));
-  const neckOffsetScratchRef = useRef(new THREE.Vector3());
-  const neckEulerRef = useRef(new THREE.Euler());
-  const neckPoseRef = useRef(new THREE.Vector2());
-  const neckBaseRef = useRef(new THREE.Vector3(0, neckBaseY, neckBaseZ));
+  const neckPivotRef = useRef<THREE.Group>(null);
   const worldTargetRef = useRef(new THREE.Vector3());
   const localTargetRef = useRef(new THREE.Vector3());
 
@@ -263,11 +272,20 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
     ? { unit: 0.00325, depth: 0.16 }
     : { unit: sourceScale, depth: 0.12 };
 
+  const headX = (452.5 - portraitCenter.x) * sourceScale;
+  const headY = (portraitCenter.y - 287.5) * sourceScale;
+  const bodyY = (portraitCenter.y - 877.5) * sourceScale;
+  const neckGeometry = useMemo(() => createRestNeckGeometry(
+    new THREE.Vector3(0, neckBaseY, neckBaseZ),
+    new THREE.Vector3(headX, headPivotY - 0.1, dimensions.depth + 0.238),
+  ), [dimensions.depth, headX]);
+
   useFrame((state, delta) => {
     const body = bodyRef.current;
     const head = headRef.current;
     if (!body || !head) return;
 
+    const frameDelta = Math.min(delta, 1 / 30);
     const movement = reducedMotion ? 0.3 : 1;
     const breathing = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.8) * 0.006;
     const idleSway = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.31) * 0.012;
@@ -294,37 +312,35 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
       body.rotation.y,
       THREE.MathUtils.clamp(targetYaw * 0.018, -0.012, 0.012) * movement,
       2,
-      delta,
+      frameDelta,
     );
     body.rotation.x = THREE.MathUtils.damp(
       body.rotation.x,
       THREE.MathUtils.clamp(-targetPitch * 0.012, -0.008, 0.008) * movement,
       2,
-      delta,
+      frameDelta,
     );
 
     head.rotation.y = THREE.MathUtils.damp(
       head.rotation.y,
-      THREE.MathUtils.clamp(targetYaw * 0.52, -0.26, 0.26) * movement + idleSway,
-      5.5,
-      delta,
+      THREE.MathUtils.clamp(targetYaw * 0.38, -0.18, 0.18) * movement + idleSway,
+      4,
+      frameDelta,
     );
     head.rotation.x = THREE.MathUtils.damp(
       head.rotation.x,
-      THREE.MathUtils.clamp(-targetPitch * 0.5, -0.15, 0.15) * movement,
-      5.5,
-      delta,
+      THREE.MathUtils.clamp(-targetPitch * 0.36, -0.1, 0.1) * movement,
+      4,
+      frameDelta,
     );
-    neckPoseRef.current.x = THREE.MathUtils.damp(neckPoseRef.current.x, head.rotation.y * 0.44, 6, delta);
-    neckPoseRef.current.y = THREE.MathUtils.damp(neckPoseRef.current.y, head.rotation.x * 0.44, 6, delta);
-
-    if (neckRef.current) {
-      neckEulerRef.current.set(neckPoseRef.current.y, neckPoseRef.current.x, 0, 'YXZ');
-      neckTopRef.current
-        .set(head.position.x, headPivotY - 0.04, dimensions.depth + 0.018)
-        .add(neckOffsetScratchRef.current.copy(neckTopOffsetRef.current).applyEuler(neckEulerRef.current));
-      neckBaseRef.current.y = body.position.y + neckBaseY;
-      deformNeck(neckGeometry, neckBaseRef.current, neckTopRef.current);
+    if (neckPivotRef.current) {
+      neckPivotRef.current.position.y = body.position.y + neckBaseY;
+      neckPivotRef.current.rotation.set(
+        body.rotation.x + head.rotation.x * 0.2,
+        body.rotation.y + head.rotation.y * 0.2,
+        0,
+        'YXZ',
+      );
     }
 
     if (eyesRef.current) {
@@ -333,22 +349,18 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
         eyesRef.current.position.x,
         THREE.MathUtils.clamp(targetYaw * 0.16, -0.1, 0.1) * movement + idleEyeDrift,
         9,
-        delta,
+        frameDelta,
       );
       eyesRef.current.position.y = THREE.MathUtils.damp(
         eyesRef.current.position.y,
         THREE.MathUtils.clamp(targetPitch * 0.14, -0.08, 0.08) * movement,
         9,
-        delta,
+        frameDelta,
       );
     }
   });
 
   const scaleRatio = dimensions.unit / sourceScale;
-  const headX = (452.5 - portraitCenter.x) * sourceScale;
-  const headY = (portraitCenter.y - 287.5) * sourceScale;
-  const bodyY = (portraitCenter.y - 877.5) * sourceScale;
-
   return (
     <group scale={scaleRatio} position={compact ? [-0.15, 0, 0] : [0, 0, 0]}>
       <group ref={bodyRef} name="bharat-upper-body" position={[0, -0.04, 0]}>
@@ -363,15 +375,9 @@ export function Character({ attentionTarget, reducedMotion, compact }: Character
           profile="body"
         />
       </group>
-      <mesh
-        ref={neckRef}
-        name="bharat-articulated-neck"
-        geometry={neckGeometry}
-        material={neckMaterial}
-        frustumCulled={false}
-        castShadow
-        receiveShadow
-      />
+      <group ref={neckPivotRef} name="bharat-articulated-neck" position={[0, neckBaseY, neckBaseZ]}>
+        <mesh geometry={neckGeometry} material={neckMaterial} castShadow receiveShadow />
+      </group>
       <mesh position={[0, neckBaseY + 0.006, neckBaseZ]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <torusGeometry args={[0.19, 0.025, 8, 28]} />
         <primitive object={neckCollarMaterial} attach="material" />

@@ -40,7 +40,16 @@ function SectionContent({ section }: { section: SectionId }) {
         <p className="tech-line">{project.technologies.join(' / ')}</p>
         {project.result && <p className="project-result">{project.result}</p>}
         <div className="entry-links">
-          {project.demo && <a href={project.demo} target="_blank" rel="noreferrer">LIVE DEMO ↗</a>}
+          {project.demo && (
+            <a
+              href={project.demo}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open ${project.name} live demo in a new tab`}
+            >
+              LIVE DEMO ↗
+            </a>
+          )}
         </div>
       </article>
     ))}</div>;
@@ -205,7 +214,9 @@ export default function App() {
       </div>
       <header className="topbar">
         <div className="identity">
-          <span className="wordmark">BR<span className="red-dot">.</span></span>
+          <a className="wordmark" href={profile.website} aria-label="Bharat Rai portfolio home">
+            BR<span className="red-dot">.</span>
+          </a>
           <span className="identity-caption">{profile.name.toUpperCase()} <i>//</i> PERSONAL ARCHIVE</span>
         </div>
         <div className="system-state"><span className="status-light" /> SYSTEM ONLINE</div>
@@ -232,6 +243,7 @@ export default function App() {
 
       {selected && (
         <aside
+          id="artifact-panel"
           className={`artifact-panel${selected.position[0] > 0 ? ' panel-left' : ''}${selected.position[1] < 0 ? ' panel-top' : ''}`}
           aria-labelledby="panel-title"
           aria-live="polite"
@@ -273,6 +285,10 @@ export default function App() {
               onMouseEnter={() => artifact && handleArtifactHover(artifact.id)}
               onMouseLeave={() => artifact && handleArtifactHover(null)}
               aria-pressed={active}
+              aria-label={item.section === 'home'
+                ? 'Return to home'
+                : `Open ${artifact?.label.toLowerCase() ?? item.label.toLowerCase()} artifact${item.section === 'projects' ? ' and MedTrace project' : ` for ${item.label.toLowerCase()}`}`}
+              aria-controls={activeSection === item.section && selectedArtifact ? 'artifact-panel' : undefined}
               ref={item.section === 'home' ? homeButton : undefined}
             >
               <span className="nav-number">{String(index + 1).padStart(2, '0')}</span>

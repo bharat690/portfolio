@@ -156,8 +156,13 @@ a:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
   pointer-events: none;
+}
+
+.topbar .wordmark {
+  pointer-events: auto;
+  color: inherit;
+  text-decoration: none;
 }
 
 .identity {
@@ -910,6 +915,10 @@ a:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .grain {
+    opacity: 0.1;
   }
 }
 

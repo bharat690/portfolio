@@ -38,7 +38,7 @@ export const profile = {
   cgpa: '9.1 / 10',
   location: 'India',
   email: 'brai65917@gmail.com',
-  website: 'https://bharatrai.online',
+  website: 'https://portfolio.bharatrai.online/',
   github: 'https://github.com/bharat690',
   statement: 'I build intelligent systems, backend infrastructure, and AI-powered applications.',
   about: 'I am a Computer Science engineering student specializing in Artificial Intelligence and Machine Learning, with a focus on backend engineering and intelligent systems. I build applications that combine APIs, databases, machine-learning models, and AI systems into usable products. My current direction sits at the intersection of AI/ML, backend engineering, databases, system design, and software architecture.',
@@ -245,6 +245,6 @@ export const educationDetails = [
 
 export const contactDetails = [
   { label: 'EMAIL', value: profile.email, href: `mailto:${profile.email}` },
-  { label: 'WEBSITE', value: 'bharatrai.online', href: profile.website },
+  { label: 'WEBSITE', value: 'portfolio.bharatrai.online', href: profile.website },
   { label: 'GITHUB', value: 'github.com/bharat690', href: profile.github },
 ];

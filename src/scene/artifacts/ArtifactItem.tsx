@@ -64,17 +64,18 @@ export function ArtifactItem({ artifact, hovered, selected, reducedMotion, onHov
   useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
+    const frameDelta = Math.min(delta, 1 / 30);
     const focused = hovered || selected;
     const targetScale = selected ? 1.075 : hovered ? 1.035 : 1;
     const idle = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.54 + artifact.position[0] * 1.7) * 0.012;
 
-    group.scale.setScalar(THREE.MathUtils.damp(group.scale.x, targetScale, 5, delta));
+    group.scale.setScalar(THREE.MathUtils.damp(group.scale.x, targetScale, 5, frameDelta));
     group.position.y = initialY + (reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.46 + artifact.position[0]) * 0.014);
     group.position.z = THREE.MathUtils.damp(
       group.position.z,
       artifact.position[2] + (selected ? 0.2 : hovered ? 0.11 : 0),
       4,
-      delta,
+      frameDelta,
     );
     camera.updateMatrixWorld();
     group.updateWorldMatrix(true, false);
@@ -84,19 +85,19 @@ export function ArtifactItem({ artifact, hovered, selected, reducedMotion, onHov
       group.rotation.x,
       baseRotation[0] + (focused ? -0.035 : idle * 0.4),
       3,
-      delta,
+      frameDelta,
     );
     group.rotation.y = THREE.MathUtils.damp(
       group.rotation.y,
       baseRotation[1] + (focused ? faceYaw : idle),
       3,
-      delta,
+      frameDelta,
     );
     group.rotation.z = THREE.MathUtils.damp(
       group.rotation.z,
       baseRotation[2] + (reducedMotion ? 0 : idle * 0.45),
       3,
-      delta,
+      frameDelta,
     );
 
     const targetHighlight = selected ? 0.46 : hovered ? 0.28 : 0;

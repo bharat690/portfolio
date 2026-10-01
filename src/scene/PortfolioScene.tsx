@@ -45,17 +45,18 @@ function SceneContents(props: PortfolioSceneProps) {
 
   useFrame((_, delta) => {
     const motion = props.reducedMotion ? 0.14 : 1;
+    const frameDelta = Math.min(delta, 1 / 30);
     const cameraDistance = (compact ? 12 : 9) - (selectedArtifact ? 0.12 : 0);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraDistance, 2, delta);
-    const artifactWeight = selectedArtifact ? 0.045 : focusArtifact ? 0.025 : 0;
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraDistance, 2, frameDelta);
+    const artifactWeight = (selectedArtifact ? 0.045 : focusArtifact ? 0.025 : 0) * motion;
     const targetX = focusArtifact
       ? focusArtifact.position[0] * artifactWeight
       : pointer.x * 0.11 * motion;
     const targetY = focusArtifact
       ? focusArtifact.position[1] * artifactWeight
       : pointer.y * 0.055 * motion;
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 1.7, delta);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, 0.25 + targetY, 1.7, delta);
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 1.7, frameDelta);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, 0.25 + targetY, 1.7, frameDelta);
     cameraTarget.current.set(targetX * 0.32, targetY, 0);
     camera.lookAt(cameraTarget.current);
 
@@ -84,7 +85,7 @@ export function PortfolioScene(props: PortfolioSceneProps) {
   return (
     <div className="scene" aria-hidden="true">
       <Canvas
-        dpr={[1, 1.5]}
+        dpr={[1, 1.25]}
         shadows
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         camera={{ position: [0, 0.25, 9], fov: 36, near: 0.1, far: 30 }}
